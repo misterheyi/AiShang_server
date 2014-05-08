@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="AishangWang_Server"
+  id="myeclipse.1385897079280"
+  context-root="/aishang"
+  j2ee-spec="6.0"
+  archive="AishangWang_Server.war">
+  <attributes>
+    <attribute name="webrootdir" value="WebRoot" />
+  </attributes>
+</project-module>
+
