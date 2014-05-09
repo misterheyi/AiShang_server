@@ -68,7 +68,7 @@ with (thisform)
         <div class="clear"></div>
       </div>
       <div class="content-box-content">
-      	<form onsubmit="return validate_form(this);" action="<%=basePath %>admin/controller/uploadVersion" method="post" enctype="multipart/form-data" >
+      	<form onsubmit="return validate_form(this); " action="<%=basePath %>admin/controller/uploadVersion" method="post" enctype="multipart/form-data" >
             <p>
               <label>版本号</label>
               <input class="text-input small-input" type="text" id="small-input" name="version" />
