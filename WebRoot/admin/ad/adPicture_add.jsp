@@ -6,7 +6,7 @@
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
 	Users u = (Users)session.getAttribute("USER");
 %>
 <!DOCTYPE>
@@ -80,7 +80,7 @@ with (thisform)
                 <option value="1">店内促销</option>
                 <option value="2">特色商品</option>
                 <option value="3">价目表</option>
-                <% } if(u.getUserGroup_id() <= 2||u.getUserGroup_id() == 5) { %>
+                <% } if(u.getUserGroup_id() <= 2) { %>
                 <option value="4">滚动广告</option>
                 <% } %>
               </select>

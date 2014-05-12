@@ -16,7 +16,7 @@
 	<div class="content-box-content">
 		<div class="tab-content default-tab">
 			<p>
-				平台拥有<%=(new HairStyleDAO()).getHairStyleCountByUid(((Users) session.getAttribute("USER")).getUsers_id())%>个发型
+				你上传了<%=(new HairStyleDAO()).getHairStyleCountByUid(((Users) session.getAttribute("USER")).getUsers_id())%>个发型
 			</p>
 			<p>
 				你标记了个<%=(new MarkHairStyleDAO()).getCountByUID(((Users) session.getAttribute("USER")).getUsers_id())%>发型

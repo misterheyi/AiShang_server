@@ -87,11 +87,10 @@ public class FileManager {
 						Streams.copy(in, outStream, true);
 						// 上传成功，则插入数据库
 						if (new File(fileRealPath).exists()) {
-							String str = saveToBCE(new File(fileRealPath));
-							status.saveDatabase(str);
-//							fileRealPath = fileRealPath.substring(fileRealPath.indexOf("upload")).replace("\\", "/");
-//							status.saveDatabase(fileRealPath);
-
+//							String str = saveToBCE(new File(fileRealPath));
+//							status.saveDatabase(str);
+							fileRealPath = fileRealPath.substring(fileRealPath.indexOf("upload")).replace("\\", "/");
+							status.saveDatabase(fileRealPath);
 						}
 					}
 				}

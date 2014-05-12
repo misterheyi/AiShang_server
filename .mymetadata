@@ -3,7 +3,7 @@
   type="WEB"
   name="AishangWang_Server"
   id="myeclipse.1385897079280"
-  context-root="/aishang"
+  context-root="/"
   j2ee-spec="6.0"
   archive="AishangWang_Server.war">
   <attributes>

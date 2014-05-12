@@ -7,7 +7,6 @@
 			+ path + "/";
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -92,7 +91,7 @@ with (thisform)
               </p>
               -->
 			  <p>
-              	<input class="text-input small-input" type="hidden" id="small-input" name="userGroup_id" value="5"/>
+              	<input class="text-input small-input" type="hidden" id="small-input" name="userGroup_id" value="2"/>
 			  </p>
 	          <p>
               <input class="button" type="submit" value="提交" />

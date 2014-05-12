@@ -23,6 +23,10 @@ public class UsersDAO extends DBMain<Users> {
 		return list;
 	}
 
+	//App
+	/**
+	 * 根据子节点Id找到父节点对象
+	 */
 	public Users getStoreByStylist(int id) throws ClassNotFoundException, SQLException {
 		sql = "select * from users where users_id = (select users_id from userRelation where users_id2 = ?)";
 		pst = getPrepareStatement(sql);
@@ -37,8 +41,12 @@ public class UsersDAO extends DBMain<Users> {
 		return null;
 	}
 
-	public ArrayList<Users> getUsersByStoreId(int id) throws ClassNotFoundException, SQLException {
-		ArrayList<Users> list = new ArrayList<Users>();
+	//App
+	/**
+	 * 根据父节点获取子节点Users集合
+	 */
+	public List<Users> getUsersByStoreId(int id) throws ClassNotFoundException, SQLException {
+		List<Users> list = new ArrayList<Users>();
 		sql = "select * from users where users_id in (select users_id2 from userRelation where users_id = ?)";
 		pst = getPrepareStatement(sql);
 		pst.setInt(1, id);
@@ -78,15 +86,35 @@ public class UsersDAO extends DBMain<Users> {
 	}
 
 	/**
-	 * 获取美发店，工作人员,代理商
+	 * 获取超管和代理商
 	 */
 	public ArrayList<Users> getManagerAndStoreByPageCount(int page, int count) throws SQLException,
 			ClassNotFoundException {
 		ArrayList<Users> list = new ArrayList<Users>();
-		sql = "select * from users where userGroup_id <=3 or userGroup_id = 5 limit ?,?";
+		sql = "select * from users where userGroup_id <=2 order by userGroup_id asc limit ?,?";
 		pst = getPrepareStatement(sql);
 		pst.setInt(1, (page - 1) * count);
 		pst.setInt(2, count);
+		rst = pst.executeQuery();
+		while (rst.next()) {
+			list.add(assemble(rst));
+		}
+		release();
+		return list;
+	}
+	
+	/**
+	 * 带关键字查询超管和代理商
+	 */
+	public ArrayList<Users> getManagerAndStoreByPageCount(String keyWord,int page, int count) throws SQLException,
+			ClassNotFoundException {
+		ArrayList<Users> list = new ArrayList<Users>();
+		sql = "select * from users where userGroup_id <=2 and (users_name like ? or users_email like ?) order by userGroup_id asc limit ?,?";
+		pst = getPrepareStatement(sql);
+		pst.setString(1, "%"+keyWord+"%");
+		pst.setString(2, "%"+keyWord+"%");
+		pst.setInt(3, (page - 1) * count);
+		pst.setInt(4, count);
 		rst = pst.executeQuery();
 		while (rst.next()) {
 			list.add(assemble(rst));
@@ -167,7 +195,11 @@ public class UsersDAO extends DBMain<Users> {
 		pst.setString(1, obj.getUsers_name());
 		pst.setString(2, obj.getUsers_email());
 		pst.setString(3, obj.getUsers_password());
-		pst.setString(4, obj.getUsers_IMEI());
+		if(obj.getUsers_IMEI()==null||"".equals(obj.getUsers_IMEI())){
+			pst.setString(4, "");
+		}else{
+			pst.setString(4, obj.getUsers_IMEI());
+		}
 		pst.setInt(5, obj.getUserGroup_id());
 		pst.setInt(6, obj.getUsers_id());
 		pst.execute();
@@ -207,6 +239,7 @@ public class UsersDAO extends DBMain<Users> {
 		return null;
 	}
 
+	//App
 	public Users findUser(String email, String password, String imei) throws ClassNotFoundException, SQLException {
 		sql = "select * from users where userGroup_id = 4 and users_email = ? and users_password = ? and users_IMEI like '%'";
 		pst = getPrepareStatement(sql);
@@ -224,8 +257,20 @@ public class UsersDAO extends DBMain<Users> {
 	}
 
 	public int getManagerAndStoreCount() throws ClassNotFoundException, SQLException {
-		sql = "select count(*) from users where userGroup_id <=3 or userGroup_id = 5";
+		sql = "select count(*) from users where userGroup_id <=2";
 		pst = getPrepareStatement(sql);
+		rst = pst.executeQuery();
+		rst.next();
+		int c = rst.getInt(1);
+		release();
+		return c;
+	}
+	
+	public int getManagerAndStoreCountByKeyword(String keyword) throws ClassNotFoundException, SQLException {
+		sql = "select count(*) from users where userGroup_id <=2 and (users_name like ? or users_email like ?)";
+		pst = getPrepareStatement(sql);
+		pst.setString(1, "%"+keyword+"%");
+		pst.setString(2, "%"+keyword+"%");
 		rst = pst.executeQuery();
 		rst.next();
 		int c = rst.getInt(1);
@@ -277,7 +322,7 @@ public class UsersDAO extends DBMain<Users> {
 	}
 	
 	public int getAgentCount() throws ClassNotFoundException, SQLException {
-		sql = "select count(*) from users where userGroup_id = 5";
+		sql = "select count(*) from users where userGroup_id = 2";
 		pst = getPrepareStatement(sql);
 		rst = pst.executeQuery();
 		rst.next();
@@ -339,6 +384,25 @@ public class UsersDAO extends DBMain<Users> {
 		rst = pst.executeQuery();
 		while (rst.next()) {
 			list.add(rst.getInt("users_id"));
+		}
+		release();
+		return list;
+	}
+
+	/**
+	 *根据关键字获取搜索出的用户结果集 
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
+	 */
+	public List<Users> getUsersByKeyWord(String keyWord) throws SQLException, ClassNotFoundException {
+		List<Users> list = new ArrayList<Users>();
+		sql = "select * from users where users_name like ? or users_email like ?";
+		pst = getPrepareStatement(sql);
+		pst.setString(1, "%"+keyWord+"%");
+		pst.setString(2, "%"+keyWord+"%");
+		rst = pst.executeQuery();
+		while (rst.next()) {
+			list.add(assemble(rst));
 		}
 		release();
 		return list;

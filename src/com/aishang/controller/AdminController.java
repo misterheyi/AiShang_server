@@ -26,6 +26,8 @@ import com.aishang.db.bean.AdPicture;
 import com.aishang.db.bean.AdVideo;
 import com.aishang.db.bean.HairStyle;
 import com.aishang.db.bean.MarkHairStyle;
+import com.aishang.db.bean.SystemSetting;
+import com.aishang.db.bean.UploadAuth;
 import com.aishang.db.bean.UserRelation;
 import com.aishang.db.bean.Users;
 import com.aishang.db.bean.Version;
@@ -33,13 +35,15 @@ import com.aishang.db.dao.AdPictureDAO;
 import com.aishang.db.dao.AdVideoDAO;
 import com.aishang.db.dao.HairStyleDAO;
 import com.aishang.db.dao.MarkHairStyleDAO;
+import com.aishang.db.dao.SystemSettingDao;
+import com.aishang.db.dao.UploadAuthDao;
 import com.aishang.db.dao.UserRelationDAO;
 import com.aishang.db.dao.UsersDAO;
 import com.aishang.db.dao.VersionDAO;
 import com.aishang.exception.MyException;
 import com.aishang.manager.FileManager;
-import com.aishang.manager.FileManager.Status;
 import com.aishang.manager.PermitManager;
+import com.aishang.manager.FileManager.Status;
 import com.common.utils.UUIDUtils;
 
 /**
@@ -54,11 +58,16 @@ public class AdminController extends HttpServlet {
 	private String basePath;
 
 	private Users own;
+	private int groupId;
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		getBasePath(request);
 		own = (Users) request.getSession().getAttribute("USER");
+		if (own != null) {
+			groupId = own.getUserGroup_id();
+		}
+
 		request.setCharacterEncoding("UTF-8");
 		response.setContentType("text/html;charset=UTF-8");
 		response.setDateHeader("Expires", -1);
@@ -74,20 +83,36 @@ public class AdminController extends HttpServlet {
 			}
 			if ("/addUser1".equals(pathInfo)) {
 				addUser1(request, response);
-				response.sendRedirect(basePath + "admin/users/users_list.jsp");
+				if (groupId == 1) {
+					response.sendRedirect(basePath
+							+ "admin/users/admin_users_list.jsp");
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/users/users_list.jsp");
+				}
 			}
 			if ("/addUser2".equals(pathInfo)) {
-				// addUser2(request, response);
 				addUser2_2(request, response);
-				response.sendRedirect(basePath + "admin/users/users_list.jsp");
+				if (groupId == 1) {
+					response.sendRedirect(basePath
+							+ "admin/users/admin_users_list.jsp");
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/users/users_list.jsp");
+				}
 			}
 			if ("/deleteUser".equals(pathInfo)) {
 				deleteUser(request, response);
-				response.sendRedirect(basePath + "admin/users/users_list.jsp");
+				if (groupId == 1) {
+					response.sendRedirect(basePath
+							+ "admin/users/admin_users_list.jsp");
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/users/users_list.jsp");
+				}
 			}
 			if ("/modifyUser".equals(pathInfo)) {
 				modifyUser(request, response);
-				response.sendRedirect(basePath + "admin/users/users_list.jsp");
 			}
 			if ("/modifyUserFace".equals(pathInfo)) {
 				modifyUserFace(request, response);
@@ -95,12 +120,18 @@ public class AdminController extends HttpServlet {
 			}
 			if ("/uploadPicture".equals(pathInfo)) {
 				savePicture(request, response);
-				response.sendRedirect(basePath
-						+ "admin/ad/adPicture_list.jsp?show=" + show);
+				String type = request.getParameter("type");
+				if (type == null) {
+					response.sendRedirect(basePath
+							+ "admin/ad/adPicture_list.jsp?show=" + show);
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/ad/scrollPicture_list.jsp");
+				}
+
 			}
 			if ("/deletePicture".equals(pathInfo)) {
 				deletePicture(request, response);
-				response.sendRedirect(basePath + "admin/ad/adPicture_list.jsp");
 			}
 			if ("/uploadVideo".equals(pathInfo)) {
 				saveVideo(request, response);
@@ -140,6 +171,23 @@ public class AdminController extends HttpServlet {
 				response.sendRedirect(basePath
 						+ "admin/version/version_list.jsp");
 			}
+			if ("/modifyUploadPwd".equals(pathInfo)) {
+				modifyUploadPwd(request, response);
+				response.sendRedirect(basePath
+						+ "admin/system/system_setting.jsp");
+			}
+			// 校验美发店上传视频权限
+			if ("/checkUploadVideoAuth".equals(pathInfo)) {
+				checkUploadVideoAuth(request, response);
+			}
+			// 开通上传权限
+			if ("/openUploadAuth".equals(pathInfo)) {
+				openUploadAuth(request, response);
+			}
+			// 校验美发店上传待机图片权限
+			if ("/checkUploadPictureAuth".equals(pathInfo)) {
+				checkUploadPictureAuth(request, response);
+			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
@@ -152,6 +200,108 @@ public class AdminController extends HttpServlet {
 			out.flush();
 			out.close();
 		}
+	}
+
+	private void checkUploadPictureAuth(HttpServletRequest request,
+			HttpServletResponse response) throws ClassNotFoundException,
+			SQLException, MyException, IOException {
+		String action = request.getParameter("action");
+
+		// 校验美发店上传待机图片权限
+		if (groupId == 3) {
+			UploadAuth uploadAuth = new UploadAuthDao().getUploadAuthByUid(own
+					.getUsers_id());
+			if (action != null && action.equals("add")) {
+				if (uploadAuth.getAllow_picture_num() == uploadAuth
+						.getUsed_picture_num()) {
+					throw new MyException("上传数量已达上限，请联系代理商");
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/ad/scrollPicture_add.jsp");
+				}
+			} else {
+				if (uploadAuth.getAuth_id() == 0) {
+					throw new MyException("没有上传权限，请联系代理商");
+				} else if (uploadAuth.getIs_open().equals("0")) {
+					response.sendRedirect(basePath
+							+ "admin/system/store_upload_pwd.jsp?type=picture");
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/ad/scrollPicture_list.jsp");
+				}
+			}
+		} else {
+			response.sendRedirect(basePath + "admin/ad/scrollPicture_list.jsp");
+		}
+	}
+
+	private void openUploadAuth(HttpServletRequest request,
+			HttpServletResponse response) throws ClassNotFoundException,
+			SQLException, MyException, IOException {
+		String type = request.getParameter("type");
+		String upload_password = request.getParameter("upload_password");
+		SystemSetting setting = new SystemSettingDao().getByType("upload_pwd");
+		if (!upload_password.equals(setting.getSetting_value())) {
+			throw new MyException("密码输入错误");
+		}
+
+		UploadAuthDao authDao = new UploadAuthDao();
+		UploadAuth uploadAuth = authDao.getUploadAuthByUid(own.getUsers_id());
+		if (uploadAuth.getAuth_id() == 0) {
+			throw new MyException("没有上传权限，请联系代理商");
+		} else {
+			uploadAuth.setIs_open("1");
+			authDao.modify(uploadAuth);
+			if (type.equals("video")) {
+				response.sendRedirect(basePath + "admin/ad/adVideo_list.jsp");
+			} else {
+				response.sendRedirect(basePath
+						+ "admin/ad/scrollPicture_list.jsp");
+			}
+
+		}
+	}
+
+	private void checkUploadVideoAuth(HttpServletRequest request,
+			HttpServletResponse response) throws ClassNotFoundException,
+			SQLException, MyException, IOException {
+		String action = request.getParameter("action");
+
+		// 校验美发店上传视频权限
+		if (groupId == 3) {
+			UploadAuth uploadAuth = new UploadAuthDao().getUploadAuthByUid(own
+					.getUsers_id());
+			if (action != null && action.equals("add")) {
+				if (uploadAuth.getAllow_video_num() == uploadAuth
+						.getAllow_video_num()) {
+					throw new MyException("上传数量已达上限，请联系代理商");
+				} else {
+					response.sendRedirect(basePath + "admin/ad/adVideo_add.jsp");
+				}
+			} else {
+				if (uploadAuth.getAuth_id() == 0) {
+					throw new MyException("没有上传权限，请联系代理商");
+				} else if (uploadAuth.getIs_open().equals("0")) {
+					response.sendRedirect(basePath
+							+ "admin/system/store_upload_pwd.jsp?type=video");
+				} else {
+					response.sendRedirect(basePath
+							+ "admin/ad/adVideo_list.jsp");
+				}
+			}
+		} else {
+			response.sendRedirect(basePath + "admin/ad/adVideo_list.jsp");
+		}
+	}
+
+	private void modifyUploadPwd(HttpServletRequest request,
+			HttpServletResponse response) throws ClassNotFoundException,
+			SQLException {
+		String uploadPwd = request.getParameter("upload_password");
+		SystemSetting setting = new SystemSettingDao().getByType("upload_pwd");
+
+		setting.setSetting_value(uploadPwd);
+		new SystemSettingDao().modify(setting);
 	}
 
 	private void uploadVersion(HttpServletRequest request,
@@ -176,15 +326,15 @@ public class AdminController extends HttpServlet {
 				}
 			}
 		};
+		// String diskPath = this.getServletConfig().getServletContext()
+		// .getRealPath("");
+		// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
+		// String spa = File.separator;
+		// String path = "upload" + spa + "version" + spa;
 		String diskPath = this.getServletConfig().getServletContext()
 				.getRealPath("");
-		diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
 		String spa = File.separator;
-		String path = "upload" + spa + "version" + spa;
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
-		// String spa = File.separator;
-		// String path = "/upload" + spa + "version" + spa;
+		String path = "/upload" + spa + "version" + spa;
 		FileManager manager = new FileManager(status, diskPath);
 		manager.read(request, path);
 	}
@@ -213,17 +363,17 @@ public class AdminController extends HttpServlet {
 				}
 			}
 		};
+		// String diskPath = this.getServletConfig().getServletContext()
+		// .getRealPath("");
+		// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
+		// String spa = File.separator;
+		// String path = "upload" + spa + "users" + spa + users_id + spa;
+		// FileManager manager = new FileManager(status, diskPath);
 		String diskPath = this.getServletConfig().getServletContext()
 				.getRealPath("");
-		diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
 		String spa = File.separator;
-		String path = "upload" + spa + "users" + spa + users_id + spa;
+		String path = "/upload" + spa + "users" + spa + users_id + spa;
 		FileManager manager = new FileManager(status, diskPath);
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
-		// String spa = File.separator;
-		// String path = "/upload" + spa + "users" + spa + users_id + spa;
-		// FileManager manager = new FileManager(status, diskPath);
 		manager.read(request, path);
 	}
 
@@ -238,8 +388,7 @@ public class AdminController extends HttpServlet {
 	private void deleteHairStyle(HttpServletRequest request,
 			HttpServletResponse response) throws NumberFormatException,
 			ClassNotFoundException, SQLException {
-		final int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
+		final int users_id = own.getUsers_id();
 		String hairStyle_id = request.getParameter("id");
 		MarkHairStyleDAO dao = new MarkHairStyleDAO();
 		HairStyleDAO hairStyleDAO = new HairStyleDAO();
@@ -249,13 +398,13 @@ public class AdminController extends HttpServlet {
 			return;
 		if (hairStyle.getUsers_id() == users_id) {
 			hairStyleDAO.delete(hairStyle);
+			// String diskPath = this.getServletConfig().getServletContext()
+			// .getRealPath("");
+			// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
+			// File file = new File(diskPath + hairStyle.getHairStyle_path());
 			String diskPath = this.getServletConfig().getServletContext()
 					.getRealPath("");
-			diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
 			File file = new File(diskPath + hairStyle.getHairStyle_path());
-			// String diskPath =
-			// this.getServletConfig().getServletContext().getRealPath("");
-			// File file = new File(diskPath + hairStyle.getHairStyle_path());
 			file.delete();
 			dao.deleteByHId(hairStyle.getHairStyle_id());
 		} else {
@@ -271,8 +420,7 @@ public class AdminController extends HttpServlet {
 	private void markHairStyle(HttpServletRequest request,
 			HttpServletResponse response) throws ClassNotFoundException,
 			SQLException {
-		final int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
+		final int users_id = own.getUsers_id();
 		final int userGroup_id = ((Users) request.getSession().getAttribute(
 				"USER")).getUserGroup_id();
 		int hid = Integer.parseInt(request.getParameter("hid"));
@@ -287,8 +435,7 @@ public class AdminController extends HttpServlet {
 
 	private void uploadHairStyle(HttpServletRequest request,
 			HttpServletResponse response) {
-		final int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
+		final int users_id = own.getUsers_id();
 		final HairStyle hairStyle = new HairStyle();
 		Status status = new Status() {
 
@@ -322,17 +469,17 @@ public class AdminController extends HttpServlet {
 				}
 			}
 		};
-		String diskPath = this.getServletConfig().getServletContext()
-				.getRealPath("");
-		diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
-		String spa = File.separator;
-		System.out.println(diskPath);
-		String path = "upload" + spa + "hairstyle" + spa + users_id + spa;
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
+		// String diskPath = this.getServletConfig().getServletContext()
+		// .getRealPath("");
+		// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
 		// String spa = File.separator;
 		// System.out.println(diskPath);
-		// String path = "/upload" + spa + "hairstyle" + spa + users_id + spa;
+		// String path = "upload" + spa + "hairstyle" + spa + users_id + spa;
+		String diskPath = this.getServletConfig().getServletContext()
+				.getRealPath("");
+		String spa = File.separator;
+		System.out.println(diskPath);
+		String path = "/upload" + spa + "hairstyle" + spa + users_id + spa;
 		FileManager manager = new FileManager(status, diskPath);
 		manager.read(request, path);
 	}
@@ -349,13 +496,13 @@ public class AdminController extends HttpServlet {
 			ClassNotFoundException, SQLException {
 		String id = request.getParameter("id");
 		AdVideoDAO dao = new AdVideoDAO();
+		// String diskPath = this.getServletConfig().getServletContext()
+		// .getRealPath("");
+		// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
+		// AdVideo adVideo = dao.getById(Integer.parseInt(id));
 		String diskPath = this.getServletConfig().getServletContext()
 				.getRealPath("");
-		diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
 		AdVideo adVideo = dao.getById(Integer.parseInt(id));
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
-		// AdVideo adVideo = dao.getById(Integer.parseInt(id));
 		File file = new File(diskPath + adVideo.getAdVideo_path());
 		if (file.isFile()) {
 			file.delete();
@@ -369,8 +516,7 @@ public class AdminController extends HttpServlet {
 	 */
 	private void saveVideo(HttpServletRequest request,
 			HttpServletResponse response) {
-		final int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
+		final int users_id = own.getUsers_id();
 		final AdVideo adVideo = new AdVideo();
 		Status status = new Status() {
 
@@ -398,17 +544,17 @@ public class AdminController extends HttpServlet {
 				}
 			}
 		};
+		// String diskPath = this.getServletConfig().getServletContext()
+		// .getRealPath("");
+		// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
+		// String spa = File.separator;
+		// String path = "upload" + spa + "ad" + spa + "video" + spa + users_id
+		// + spa;
 		String diskPath = this.getServletConfig().getServletContext()
 				.getRealPath("");
-		diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
 		String spa = File.separator;
-		String path = "upload" + spa + "ad" + spa + "video" + spa + users_id
+		String path = "/upload" + spa + "ad" + spa + "video" + spa + users_id
 				+ spa;
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
-		// String spa = File.separator;
-		// String path = "/upload" + spa + "ad" + spa + "video" + spa + users_id
-		// + spa;
 		FileManager manager = new FileManager(status, diskPath);
 		manager.read(request, path);
 	}
@@ -419,13 +565,22 @@ public class AdminController extends HttpServlet {
 	 * @throws NumberFormatException
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
+	 * @throws IOException
 	 */
 	private void deletePicture(HttpServletRequest request,
 			HttpServletResponse response) throws NumberFormatException,
-			ClassNotFoundException, SQLException {
+			ClassNotFoundException, SQLException, IOException {
 		String id = request.getParameter("id");
+		String type = request.getParameter("type");
 		AdPictureDAO adPictureDAO = new AdPictureDAO();
 		adPictureDAO.deleteById(Integer.parseInt(id));
+		if (type != null && type.equals("4")) {
+			response.sendRedirect(basePath + "admin/ad/scrollPicture_list.jsp");
+		} else {
+			response.sendRedirect(basePath
+					+ "admin/ad/adPicture_list.jsp?show=" + type);
+		}
+
 	}
 
 	String show = "1";
@@ -439,21 +594,17 @@ public class AdminController extends HttpServlet {
 	@SuppressWarnings("rawtypes")
 	private void savePicture(HttpServletRequest request,
 			HttpServletResponse response) {
-		int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
+		final int users_id = own.getUsers_id();
 		String adPicture_desc = "";
 		String adPictureGroup_id = "";
-		String saveRelativPath = "upload" + File.separator + "ad"
-				+ File.separator + "picture" + File.separator + users_id
-				+ File.separator;
-		String diskPath = this.getServletConfig().getServletContext()
-				.getRealPath("");
+		// String saveRelativPath = "upload" + File.separator + "ad"
+		// + File.separator + "picture" + File.separator + users_id
+		// + File.separator;
+		// String diskPath = this.getServletConfig().getServletContext()
+		// .getRealPath("");
 		// diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
-		// String saveRelativPath = "/upload" + File.separator + "ad" +
-		// File.separator + "picture" + File.separator
-		// + users_id + File.separator;
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
+		String saveRelativPath = "/upload" + File.separator + "ad" + File.separator + "picture" + File.separator + users_id+ File.separator;
+		String diskPath = this.getServletConfig().getServletContext().getRealPath("");
 		String saveDiskPath = diskPath + saveRelativPath; // 图片保存的目录
 		String firstFileName = "";
 		String fileRealPath = "";// 文件存放真实地址
@@ -487,27 +638,21 @@ public class AdminController extends HttpServlet {
 					if (fileName != null) {
 						firstFileName = item.getName().substring(
 								item.getName().lastIndexOf(File.separator) + 1);
-						String formatName = firstFileName
-								.substring(firstFileName.lastIndexOf("."));// 获取文件后缀名
+						String formatName = firstFileName.substring(firstFileName.lastIndexOf("."));// 获取文件后缀名
 						fileRealPath = saveDiskPath + saveFileName + formatName;// 文件存放真实地址
-						BufferedInputStream in = new BufferedInputStream(
-								item.getInputStream());// 获得文件输入流
-						BufferedOutputStream outStream = new BufferedOutputStream(
-								new FileOutputStream(new File(fileRealPath)));
+						BufferedInputStream in = new BufferedInputStream(item.getInputStream());// 获得文件输入流
+						BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(new File(fileRealPath)));
 						// 开始把文件写到你指定的上传文件夹
 						Streams.copy(in, outStream, true);
 						// 上传成功，则插入数据库
 						if (new File(fileRealPath).exists()) {
-							String path = FileManager.saveToBCE(new File(
-									fileRealPath));
-							// String path =
-							// fileRealPath.substring(fileRealPath.indexOf("upload")).replace("\\",
-							// "/");
+							// String path = FileManager.saveToBCE(new File(
+							// fileRealPath));
+							String path = fileRealPath.substring(fileRealPath.indexOf("upload")).replace("\\", "/");
 							AdPicture picture = new AdPicture();
 							picture.setAdPicture_desc(adPicture_desc);
 							picture.setAdPicture_path(path);
-							picture.setAdPictureGroup_id(Integer
-									.parseInt(adPictureGroup_id));
+							picture.setAdPictureGroup_id(Integer.parseInt(adPictureGroup_id));
 							picture.setUsers_id(users_id);
 							AdPictureDAO dao = new AdPictureDAO();
 							dao.add(picture);
@@ -529,25 +674,67 @@ public class AdminController extends HttpServlet {
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 * @throws MyException
+	 * @throws IOException
 	 */
 	private void modifyUser(HttpServletRequest request,
 			HttpServletResponse response) throws ClassNotFoundException,
-			SQLException, MyException {
+			SQLException, MyException, IOException {
 		String users_name = request.getParameter("users_name");
 		String users_email = request.getParameter("users_email");
 		String users_password = request.getParameter("users_password");
 		String users_IMEI = request.getParameter("users_IMEI");
-		String userGroup_id = request.getParameter("userGroup_id");
 		String users_id = request.getParameter("users_id");
-		Users users = new Users(users_name, users_email, users_password,
-				users_IMEI, Integer.parseInt(userGroup_id));
-		users.setUsers_id(Integer.parseInt(users_id));
+		String upload_adPicture_num = request.getParameter("upload_adPicture_num");
+		String upload_adVideo_num = request.getParameter("upload_adVideo_num");
+		String users_is_upload = request.getParameter("users_is_upload");
+
+		UsersDAO dao = new UsersDAO();
+		Users users = dao.getById(Integer.parseInt(users_id));
 
 		if (PermitManager.deleteUserPermit(own, users)) {
-			UsersDAO dao = new UsersDAO();
+
+			users.setUsers_email(users_email);
+			users.setUsers_IMEI(users_IMEI);
+			users.setUsers_name(users_name);
+
+			if (!"".equals(users_password)) {
+				users.setUsers_password(users_password);
+			}
+
 			dao.modify(users);
+
+			if (!"".equals(upload_adPicture_num)
+					&& null != upload_adPicture_num
+					&& !"".equals(upload_adVideo_num)
+					&& null != upload_adVideo_num) {
+				int allowPictureNum = Integer.valueOf(request
+						.getParameter("upload_adPicture_num"));
+				int allowVideoNum = Integer.valueOf(request
+						.getParameter("upload_adVideo_num"));
+				UploadAuthDao authDao = new UploadAuthDao();
+				UploadAuth auth = new UploadAuth();
+				auth.setAllow_picture_num(allowPictureNum);
+				auth.setAllow_video_num(allowVideoNum);
+				auth.setUsers_id(users.getUsers_id());
+
+				if (users_is_upload.equals("on")) {
+					auth.setUsed_picture_num(0);
+					auth.setUsed_video_num(0);
+					auth.setIs_open("0");
+					authDao.add(auth);
+				} else {
+					authDao.modify(auth);
+				}
+			}
+
 		} else {
 			throw new MyException("权限不足");
+		}
+
+		if (users.getUserGroup_id() != 4) {
+			response.sendRedirect(basePath + "admin/users/users_list.jsp");
+		} else {
+			response.sendRedirect(basePath + "admin/index.jsp");
 		}
 
 	}
@@ -594,85 +781,16 @@ public class AdminController extends HttpServlet {
 		adVideoDAO.deleteByUID(id);
 	}
 
-	/**
-	 * @param request
-	 * @param response
-	 * @throws ClassNotFoundException
-	 * @throws SQLException
-	 * @throws MyException
-	 */
-	public void addUser2(HttpServletRequest request,
-			HttpServletResponse response) throws ClassNotFoundException,
-			SQLException, MyException {
-		final int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
-		final Users users = new Users();
-		Status status = new Status() {
-
-			@Override
-			public void saveDatabase(String path)
-					throws ClassNotFoundException, SQLException {
-				users.setUsers_face(path);
-				UsersDAO dao = new UsersDAO();
-				dao.add(users);
-				Users u = dao.findUser(users.getUsers_email(),
-						users.getUsers_password());
-				UserRelationDAO relationDAO = new UserRelationDAO();
-				UserRelation relation = new UserRelation();
-				relation.setUsers_id(users_id);
-				relation.setUsers_id2(u.getUsers_id());
-				relationDAO.add(relation);
-			}
-
-			@Override
-			public void readData(DiskFileItem item) throws Exception {
-				String temp = item.getFieldName();
-				if ("users_name".equals(temp)) {
-					String users_name = new String(item.getString("UTF-8"));
-					users.setUsers_name(users_name);
-				}
-				if ("users_email".equals(temp)) {
-					String users_email = new String(item.getString("UTF-8"));
-					users.setUsers_email(users_email);
-				}
-				if ("users_IMEI".equals(temp)) {
-					String users_IMEI = new String(item.getString("UTF-8"));
-					users.setUsers_IMEI(users_IMEI);
-				}
-				if ("users_password".equals(temp)) {
-					String users_password = new String(item.getString("UTF-8"));
-					users.setUsers_password(users_password);
-				}
-				if ("userGroup_id".equals(temp)) {
-					String userGroup_id = new String(item.getString("UTF-8"));
-					users.setUserGroup_id(Integer.parseInt(userGroup_id));
-				}
-			}
-		};
-
-		String diskPath = this.getServletConfig().getServletContext()
-				.getRealPath("");
-		diskPath = diskPath.substring(0, diskPath.lastIndexOf("/") + 1);
-		String spa = File.separator;
-		String path = "upload" + spa + "users" + spa + users_id + spa;
-		// String diskPath =
-		// this.getServletConfig().getServletContext().getRealPath("");
-		// String spa = File.separator;
-		// String path = "/upload" + spa + "users" + spa + users_id + spa;
-		FileManager manager = new FileManager(status, diskPath);
-		manager.read(request, path);
-	}
-
 	private void addUser2_2(HttpServletRequest request,
 			HttpServletResponse response) throws ClassNotFoundException,
 			SQLException, MyException {
-		final int users_id = ((Users) request.getSession().getAttribute("USER"))
-				.getUsers_id();
+		final int users_id = own.getUsers_id();
 
 		String users_name = request.getParameter("users_name");
 		String users_email = request.getParameter("users_email");
 		String users_password = request.getParameter("users_password");
 		String users_IMEI = request.getParameter("users_IMEI");
+		String is_upload = request.getParameter("users_is_upload");
 		if (users_IMEI == null) {
 			users_IMEI = "null";
 		}
@@ -694,6 +812,23 @@ public class AdminController extends HttpServlet {
 			relation.setUsers_id(users_id);
 			relation.setUsers_id2(u.getUsers_id());
 			relationDAO.add(relation);
+
+			// is_upload为on说明开通上传权限，则添加美发店可上传权限记录
+			if (is_upload.equals("on")) {
+				int allowPictureNum = Integer.valueOf(request
+						.getParameter("upload_adPicture_num"));
+				int allowVideoNum = Integer.valueOf(request
+						.getParameter("upload_adVideo_num"));
+				UploadAuthDao authDao = new UploadAuthDao();
+				UploadAuth uploadAuth = new UploadAuth();
+				uploadAuth.setAllow_picture_num(allowPictureNum);
+				uploadAuth.setAllow_video_num(allowVideoNum);
+				uploadAuth.setUsed_picture_num(0);
+				uploadAuth.setUsed_video_num(0);
+				uploadAuth.setUsers_id(u.getUsers_id());
+				uploadAuth.setIs_open("0");
+				authDao.add(uploadAuth);
+			}
 
 		} else {
 			throw new MyException("权限不足");

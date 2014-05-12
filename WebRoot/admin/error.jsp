@@ -26,7 +26,7 @@
   	<div id="main-content">
     <h2>错误！</h2>
     <h3><%=request.getAttribute("note") %></h3>
-    
+    <a class="button" href="javascript:history.go(-1)">返回</a>
     <div class="clear"></div>  
     <jsp:include page="include/footer.jsp" />
     </div>

@@ -38,11 +38,13 @@
           <span> <img src="../resources/images/icons/pencil_48.png" alt="icon" /><br />修改信息</span>
         </a>
       </li>
+      <%if(users.getUserGroup_id() ==4){%>
       <li>
         <a class="shortcut-button" href="users/users_modify_face.jsp?uid=<%=users.getUsers_id() %>">
           <span> <img src="../resources/images/icons/image_add_48.png" alt="icon" /><br />修改头像</span>
         </a>
       </li>
+      <%} %>
       <!--  
       <li>
         <a class="shortcut-button" href="#">
@@ -57,13 +59,13 @@
 	  -->
     </ul>
     <div class="clear"></div>
-    <% if(users.getUserGroup_id() <=2){ %>
+    <% if(users.getUserGroup_id() ==1){ %>
 	<jsp:include page="profile/showVideoInfo.jsp" />
 	<% } if(users.getUserGroup_id()==4) {%>
 	<jsp:include page="profile/showHairstyle.jsp" />
 	<% } if(users.getUserGroup_id()==3) {%>
 	<jsp:include page="profile/showHairstylist.jsp" />
-	<% } if(users.getUserGroup_id()==5) {%>
+	<% } if(users.getUserGroup_id()==2) {%>
 	<jsp:include page="profile/showAgentInfo.jsp" />
 	<% } %>
 	<div class="clear"></div>

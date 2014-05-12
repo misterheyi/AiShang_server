@@ -3,12 +3,13 @@
 <%@page import="com.aishang.db.bean.Users"%>
 <%@page import="com.aishang.db.dao.UsersDAO"%>
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@page import="com.aishang.vo.HairStyleVO"%>
+<%@page import="com.aishang.manager.HairStyleManager"%>
 <%
 	String path = request.getContextPath();
-	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path + "/";
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
 %>
 <!DOCTYPE html>
 <%@page import="com.aishang.db.bean.Users"%>
@@ -35,7 +36,7 @@
 
 <body>
 <div id="body-wrapper">
-  	<jsp:include page="../include/sidebar.jsp" ><jsp:param name="selected" value=""/></jsp:include>
+  	<jsp:include page="../include/sidebar.jsp" ><jsp:param name="selected" value="hairstyle"/></jsp:include>
 	<div id="main-content">
       <div class="content-box">
 	  <div class="content-box-header">
@@ -44,12 +45,19 @@
 	  </div>
 	  <%
 	  	Users users = (Users)session.getAttribute("USER");
+	    int groupId = users.getUserGroup_id();
 	  	HairStyleDAO dao = new HairStyleDAO();
 	  	int rowCuont = 0;
-	  	if(users.getUserGroup_id()==1||users.getUserGroup_id()==2){
+	  	if(users.getUserGroup_id()==1){
 	  		rowCuont = dao.getHairStyleCount();
-	  	}else{
-	  		rowCuont = dao.getCountByUID(users.getUsers_id());
+	  	}
+	  	
+	  	if(users.getUserGroup_id()==3){
+	  		rowCuont = dao.getStoreHairStyleCountByUid(users.getUsers_id());//美发店
+	  	}
+	  	
+	  	if(users.getUserGroup_id()==4){
+	  		rowCuont = dao.getHairStyleCountByUid(users.getUsers_id());//发型师
 	  	}
 	  	
 	  	int pageSize = 5;
@@ -67,11 +75,16 @@
   		if(pageNow == i*5)
   		i-=1;
   		
-  		ArrayList<HairStyle> list = new ArrayList<HairStyle>();
-  		if(users.getUserGroup_id()==1||users.getUserGroup_id()==2){
-  			list = dao.getAllByLimit(pageNow, pageSize);
-	  	}else{
-	  		list = dao.getAllByUID_Limit(users.getUsers_id(), pageNow, pageSize);
+  		List<HairStyleVO> list = new ArrayList<HairStyleVO>();
+  		HairStyleManager hairStyleManager = new HairStyleManager();
+  		if(users.getUserGroup_id()==1){
+  			list = hairStyleManager.getAllByLimit(pageNow, pageSize);
+	  	}
+  		if(users.getUserGroup_id()==3){
+  			list = hairStyleManager.getStoreByLimit(users.getUsers_id(),pageNow, pageSize);
+	  	}
+  		if(users.getUserGroup_id()==4){
+	  		list = hairStyleManager.getAllByUID_Limit(users.getUsers_id(), pageNow, pageSize);
 	  	}
 	   %>
 	  <div class="content-box-content">
@@ -83,16 +96,22 @@
 	  				<td>性别</td>
 	  				<td>类型</td>
 	  				<td>发长</td>
+	  				<%if(groupId==1){ %>
+	               <td>上传者</td>
+	               <td>用户组</td>
+	               	<%} %>
 	  				<td>操作</td>
 	  			</tr>
 	  		</thead>
             <tbody>
             	<%
-            		for(int j = 0; j < list.size(); j++) { HairStyle hairStyle = list.get(j);
+            		for(int j = 0; j < list.size(); j++) { 
+            			HairStyle hairStyle = list.get(j).getHairStyle();
+            			Users user = list.get(j).getUser();
             	%>
             	<tr>
             		<td>
-            			<a href="<%=basePath+hairStyle.getHairStyle_path() %>" target="_blank">
+            			<a href="<%=filePath+hairStyle.getHairStyle_path() %>" target="_blank">
             			<img src="<%=filePath+hairStyle.getHairStyle_path() %>" class="imgCss">
             			</a>
             		</td>
@@ -100,10 +119,12 @@
             		<td><%=hairStyle.getHairStyle_sex() %></td>
             		<td><%=hairStyle.getHairStyle_desc() %></td>
             		<td><%=hairStyle.getHairStyle_height() %></td>
+            		<%if(groupId==1){ %>
+	               <td><%=user.getUsers_email() %>[<%=user.getUsers_name() %>]</td>
+	               <td><%String groupName =""; switch(user.getUserGroup_id()){case 1:groupName="超级管理员";break;case 3:groupName="美发店";break;case 4:groupName="发型师";break;} %><%=groupName %></td>
+	               	<%} %>
             		<td>
-            	<!--
             		<a href="hairstyle_modify.jsp" title="Edit"><img src="../../resources/images/icons/pencil.png" alt="Edit" /></a> 
-                -->
                   	<a href="" title="Delete" onclick="deleteHS(<%=hairStyle.getHairStyle_id()%>);return false;"><img src="../../resources/images/icons/cross.png" alt="Delete" /></a> 
                 	</td>
                 	
@@ -112,7 +133,7 @@
             </tbody>
             <tfoot>
             	<tr>
-                <td colspan="6">
+                <td colspan="8">
                 <div class="bulk-actions align-left">
               	  <a href="hairstyle_add.jsp" class="button">增加</a>
               	  <% if(users.getUserGroup_id() ==4) {%>

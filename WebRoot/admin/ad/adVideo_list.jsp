@@ -3,12 +3,20 @@
 <%@page import="com.aishang.db.bean.Users"%>
 <%@page import="com.aishang.db.dao.UsersDAO"%>
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@page import="com.aishang.manager.AdVideoManager"%>
+<%@page import="com.aishang.vo.AdVideoVO"%>
+<%@page import="com.aishang.db.bean.UploadAuth"%>
+<%@page import="com.aishang.db.dao.UploadAuthDao"%>
+<%@page import="com.aishang.exception.MyException"%>
 <%
 	String path = request.getContextPath();
-	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path + "/";
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
+	
+	Users users = (Users)session.getAttribute("USER");
+	int groupId = users.getUserGroup_id();
+	
 %>
 <!DOCTYPE html>
 <%@page import="com.aishang.db.bean.Users"%>
@@ -39,34 +47,57 @@
                 <th>名称</th>
                 <th>类型</th>
                 <th>播放次数</th>
+               <%if(groupId<=2){ %>
+               <th>上传者</th>
+               <th>用户组</th>
+               	<%} %>
                 <th>操作</th>
               </tr>
         </thead>
         <tbody>
         <%
-        	Users users = (Users)session.getAttribute("USER");
-        
-        	AdVideoDAO dao = new AdVideoDAO();
-        	List<AdVideo> list = dao.getVideoByUid(users.getUsers_id());
-        	for(AdVideo adVideo : list) {
+        	AdVideoManager adVideoManager = new AdVideoManager();
+        	List<AdVideoVO> list = new ArrayList<AdVideoVO>();
+        	//超管
+        	if(users.getUserGroup_id()==1){
+        		list = adVideoManager.getAll();        		
+        	}
+        	//代理商
+        	if(users.getUserGroup_id()==2){
+        		list = adVideoManager.getAgentVideoByUid(users.getUsers_id());
+        	}
+        	//美发店
+        	if(users.getUserGroup_id()==3){
+        		list = adVideoManager.getStoreVideoByUid(users.getUsers_id());
+        	}
+        	
+        	if(list.size()>0){
+        	for(AdVideoVO adVideoVO : list) {
+        		AdVideo adVideo = adVideoVO.getAdVideo();
+        		Users user = adVideoVO.getUser();
          %>
         	<tr>
         		<td><a target="_blank" href="<%=filePath+adVideo.getAdVideo_path()%>"><%=adVideo.getAdVideo_desc() %></a></td>
         		<td><%=adVideo.getAdVideo_type() == 0 ? "待机视频":"点选视频" %></td>
         		<td><%=adVideo.getAdVideo_count() %></td>
+        		 <%if(groupId<=2){ %>
+               <td><%=user.getUsers_email() %>[<%=user.getUsers_name() %>]</td>
+               <td><%String groupName =""; switch(user.getUserGroup_id()){case 1:groupName="超级管理员";break;case 3:groupName="美发店";break;case 2:groupName="代理商";break;} %><%=groupName %></td>
+               	<%} %>
         		<td>
         		<a href="" title="Delete" onclick="deleteAD(<%=adVideo.getAdVideo_id()%>);return false;"><img src="../../resources/images/icons/cross.png" alt="Delete" /></a> 
                 </td>
         	</tr>
           <%
           	}
+        	}
            %>
         </tbody>
         <tfoot>
         	<tr>
         		<td colspan="3">
         		  <div class="bulk-actions align-left">
-                    <a class="button" href="adVideo_add.jsp">增加广告</a> 
+                    <a class="button" href="<%=basePath %><%if(groupId==3){ %>admin/controller/checkUploadVideoAuth?action=add<%}else{ %>admin/ad/adVideo_add.jsp<%} %>">增加广告</a> 
                   </div>
                   <div class="pagination"> 
                   </div>

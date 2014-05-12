@@ -6,7 +6,7 @@
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -37,17 +37,11 @@
 	UsersDAO usersDAO = new UsersDAO();
 	
 	int rowCuont = 10;
-	if(id == 1) {
-		rowCuont = usersDAO.getManagerAndStoreCount();
-	}
 	if(id == 2) {
-		rowCuont = usersDAO.getStoreCount();
+		rowCuont = usersDAO.getStoreCount(users.getUsers_id());
 	}
 	if(id == 3) {
 		rowCuont = usersDAO.getHairStylistCountByMyStore(users.getUsers_id());
-	}
-	if(id == 5) {
-		rowCuont = usersDAO.getStoreCount(users.getUsers_id());
 	}
 	
   	int pageSize = 10;
@@ -67,16 +61,10 @@
   		i-=1;
 	
 	ArrayList<Users> list = null;
-	if(id == 1) {
-		list = usersDAO.getManagerAndStoreByPageCount(pageNow, pageSize);
-	}
 	if(id == 2) {
-		list = usersDAO.getStoreByPageCount(pageNow, pageSize);
-	}
-	if(id == 3) {
 		list = usersDAO.getHairStylistByPageCount(users.getUsers_id(), pageNow, pageSize);
 	}
-	if(id == 5) {
+	if(id == 3) {
 		list = usersDAO.getHairStylistByPageCount(users.getUsers_id(), pageNow, pageSize);
 	}
  %>
@@ -96,13 +84,17 @@
             <thead>
               <tr>
                 <th>编号</th>
+                <%if(id <=2){ %>
                 <th>用户组</th>
+                <%} %>
 				<% if(id == 3){ %>
 				<th>头像</th>
                 <% } %>
                 <th>昵称</th>
                 <th>邮箱</th>
+                <% if(id == 4){ %>
                 <th>IMEI</th>
+                <%} %>
                 <th>操作</th>
               </tr>
             </thead>
@@ -114,13 +106,17 @@
  %>
               <tr>
                 <td><%=u.getUsers_id() %></td>
-                <td><%String group = "";switch(u.getUserGroup_id()){case 1:group="超级管理员";break;case 2:group="工作人员";break;case 3:group="美发店";break;case 4:group="发型师";break;case 5:group="代理商";break;} %>[<%=group %>]</td>
+                <%if(id <=2){ %>
+                <td><%String group = "";switch(u.getUserGroup_id()){case 1:group="超级管理员";break;case 2:group="代理商";break;case 3:group="美发店";break;case 4:group="发型师";break;} %>[<%=group %>]</td>
+                <%} %>
                 <% if(id == 3){ %>
-                <td><img src="<%=u.getUsers_face().equals("null") ? basePath+"resources/images/user_default.png" : filePath+u.getUsers_face() %>" style="width: 40px;height: 40px"/></td>
+                <td><img src="<%=u.getUsers_face()==null ? basePath+"resources/images/user_default.png" : filePath+u.getUsers_face() %>" style="width: 40px;height: 40px"/></td>
                 <% } %>
                 <td><%=u.getUsers_name() %></td>
                 <td><%=u.getUsers_email() %></td>
+                <%if(id==4){ %>
                 <td><%=u.getUsers_IMEI() %></td>
+                <%} %>
                 <td>
                 <% if(id == 3){ %>
                   <a href="users_modify_face.jsp?uid=<%=u.getUsers_id() %>" title="修改头像"><img src="../../resources/images/icons/image_add_48.png" alt="Edit"  style="width: 18px;height: 18px"/></a> 
@@ -139,14 +135,8 @@
                 <td colspan="6">
                   <div class="bulk-actions align-left">
                   <%
-                  if(id == 1){
+                  	if(id == 1){
                    %>
-                   	<!-- <a class="button" href="users_addManager.jsp">增加工作人员</a> -->
-                  <%
-                  	}
-                  	if(id == 1 || id == 2){
-                   %>
-                    <!-- <a class="button" href="users_addStore.jsp">增加美发店</a> -->
                     <a class="button" href="users_addAgent.jsp">增加代理商</a>
                   <%
                   	}
@@ -154,9 +144,9 @@
                    %>
                     <a class="button" href="users_addHairStylist.jsp">增加发型师</a>
                     <% }
-                  	if(id == 5){
+                  	if(id == 2){
                    %>
-                    <a class="button" href="users_addStore2.jsp">增加美发店</a>
+                    <a class="button" href="users_addStore.jsp">增加美发店</a>
                     <% }%>
                   </div>
                   <div class="pagination">

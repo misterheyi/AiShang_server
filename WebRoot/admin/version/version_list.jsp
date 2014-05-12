@@ -8,7 +8,7 @@
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
 %>
 <!DOCTYPE>
 <html xmlns="http://www.w3.org/1999/xhtml">

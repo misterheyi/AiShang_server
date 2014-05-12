@@ -7,7 +7,7 @@
 	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
 			+ path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
 %>
 <div class="content-box column-right">
 	<div class="content-box-header">
@@ -43,7 +43,6 @@
 	<div class="content-box-content">
 	<div class="tab-content default-tab">
 		<p>拥有<%=(new UsersDAO()).getStoreCount() %>家美发店</p>
-		<p>拥有<%=(new UsersDAO()).getManagerCount() %>个网站工作人员</p>
 		<p>拥有<%=(new UsersDAO()).getAgentCount() %>个代理商</p>
 	</div>
 	</div>

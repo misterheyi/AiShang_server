@@ -21,7 +21,6 @@ import com.aishang.db.bean.Version;
 import com.aishang.db.dao.AdPictureDAO;
 import com.aishang.db.dao.AdVideoDAO;
 import com.aishang.db.dao.HairStyleDAO;
-import com.aishang.db.dao.UserRelationDAO;
 import com.aishang.db.dao.UsersDAO;
 import com.aishang.db.dao.VersionDAO;
 import com.aishang.db.dto.AdVideoDTO;
@@ -75,6 +74,10 @@ public class MobileController extends HttpServlet {
 				String result = scrollPicture(request, response);
 				out.print(result);
 			}
+			if ("/playScrollPicture".equals(pathInfo)){
+				String result = playScrollPicture(request, response);
+				out.print(result);
+			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			DTOMain dto = new DTOMain();
@@ -92,10 +95,25 @@ public class MobileController extends HttpServlet {
 		out.close();
 	}
 
+	private synchronized String playScrollPicture(HttpServletRequest request,
+			HttpServletResponse response) throws ClassNotFoundException, SQLException {
+		DTOMain dto = new DTOMain();
+		String id = request.getParameter("id");
+		AdPictureDAO adPictureDAO = new AdPictureDAO();
+		AdPicture adPicture = adPictureDAO.getById(Integer.parseInt(id));
+		if (adPicture == null)
+			throw new SQLException();
+		adPictureDAO.modifyCount(adPicture.getAdPictureCount() + 1,adPicture.getAdPicture_id());
+
+		dto.setStatus_code(200);
+		dto.setStatus_msg("成功");
+		return JSON.toJSONString(dto);
+	}
+
 	private String scrollPicture(HttpServletRequest request,
 			HttpServletResponse response) throws ClassNotFoundException,
 			SQLException {
-		String id = request.getParameter("hairstylistId");
+		String id = request.getParameter("storeId");
 		List<AdPicture> ad4 = new AdPictureDAO().getScollPicture(id);
 		PriceListDTO dto = new PriceListDTO();
 		dto.setAd4(ad4);
@@ -114,7 +132,7 @@ public class MobileController extends HttpServlet {
 	private String getHairStyle(HttpServletRequest request,
 			HttpServletResponse response) throws UnsupportedEncodingException,
 			NumberFormatException, ClassNotFoundException, SQLException {
-		String id = request.getParameter("hairstylistId");
+		String id = request.getParameter("storeId");
 		String area = request.getParameter("area");
 		if (area == null)
 			area = "";
@@ -144,18 +162,14 @@ public class MobileController extends HttpServlet {
 	private String adPictrue(HttpServletRequest request,
 			HttpServletResponse response) throws NumberFormatException,
 			ClassNotFoundException, SQLException {
-		String id = request.getParameter("hairstylistId");
-		String storeId = request.getParameter("storeId");
+		int storeId = Integer.valueOf(request.getParameter("storeId"));
 		UsersDAO usersDAO = new UsersDAO();
-		List<Users> hairstylist = usersDAO.getUsersByStoreId(Integer
-				.parseInt(storeId));
+		List<Users> hairstylist = usersDAO.getUsersByStoreId(storeId);
 		AdPictureDAO adPictureDAO = new AdPictureDAO();
-		List<AdPicture> list = adPictureDAO.getAllByUid(new UserRelationDAO()
-				.getUsersIdByUid2(Integer.parseInt(id)));
+		List<AdPicture> list = adPictureDAO.getAllByUid(storeId);
 		List<AdPicture> ad1 = new ArrayList<AdPicture>();
 		List<AdPicture> ad2 = new ArrayList<AdPicture>();
 		List<AdPicture> ad3 = new ArrayList<AdPicture>();
-		List<AdPicture> ad4 = adPictureDAO.getScollPicture(id);
 		for (AdPicture adPicture : list) {
 			switch (adPicture.getAdPictureGroup_id()) {
 			case 1:
@@ -174,7 +188,6 @@ public class MobileController extends HttpServlet {
 		dto.setAd1(ad1);
 		dto.setAd2(ad2);
 		dto.setAd3(ad3);
-		dto.setAd4(ad4);
 		dto.setHairstylist(hairstylist);
 		return JSON.toJSONString(dto);
 	}
@@ -183,9 +196,10 @@ public class MobileController extends HttpServlet {
 			HttpServletResponse response) throws NumberFormatException,
 			ClassNotFoundException, SQLException {
 		AdVideoDTO dto = new AdVideoDTO();
-		String id = request.getParameter("hairstylistId");
+		String agentId = request.getParameter("agentId");
+		String storeId = request.getParameter("storeId");
 		AdVideoDAO adVideoDAO = new AdVideoDAO();
-		List<AdVideo> videos = adVideoDAO.getAllByUid(Integer.valueOf(id));
+		List<AdVideo> videos = adVideoDAO.getAllByUid(Integer.valueOf(agentId),Integer.valueOf(storeId));
 		dto.setVideos(videos);
 
 		return JSON.toJSONString(dto);

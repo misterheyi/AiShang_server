@@ -23,6 +23,9 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 		return list;
 	}
 
+	/**
+	 * 获取发型库总数
+	 */
 	public int getHairStyleCount() throws ClassNotFoundException, SQLException {
 		sql = "select count(*) from hairStyle";
 		pst = getPrepareStatement(sql);
@@ -34,11 +37,12 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 	}
 	
 	/**
-	 * 获取发型师所属美发店的发型总数
+	 * 获取发型师上传的发型库总数
 	 */
 	public int getHairStyleCountByUid(int uid) throws ClassNotFoundException, SQLException {
-		sql = "select count(*) from hairStyle where users_id = "+uid+" or users_id in (select users_id from userRelation where users_id2 ="+uid+") ";
+		sql = "select count(*) from hairStyle where users_id = ? ";
 		pst = getPrepareStatement(sql);
+		pst.setInt(1, uid);
 		rst = pst.executeQuery();
 		rst.next();
 		int c = rst.getInt(1);
@@ -49,7 +53,7 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 	/**
 	 * 获取美发店的发型总数
 	 */
-	public int getAgentHairStyleCountByUid(int uid) throws ClassNotFoundException, SQLException {
+	public int getStoreHairStyleCountByUid(int uid) throws ClassNotFoundException, SQLException {
 		sql = "select count(*) from hairStyle where users_id = "+uid+" or users_id in (select users_id2 from userRelation where users_id ="+uid+") ";
 		pst = getPrepareStatement(sql);
 		rst = pst.executeQuery();
@@ -93,13 +97,18 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 */
+	//App
 	public ArrayList<HairStyle> getAllByGroup_LimitByUid(String area, String desc, String height, String sex, int page,
 			int count,int uid) throws ClassNotFoundException, SQLException {
 		ArrayList<HairStyle> list = new ArrayList<HairStyle>();
-		int usersId = new UserRelationDAO().getUsersIdByUid2(uid);
+		List<Integer> hairStylesListIds = new UserRelationDAO().getUsersId2ByUid(uid);
 		String user = String.valueOf(uid);
-		user+=","+usersId;
+		
 		List<Integer> managerIds = new UsersDAO().getManagerUserId();//获取管理员Id
+		if(hairStylesListIds.size()>0){
+			managerIds.addAll(hairStylesListIds);
+		}
+		
 		for(Integer id:managerIds){
 			user+=","+id;
 		}
@@ -168,7 +177,7 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 */
-	public ArrayList<HairStyle> getAgentByGroup_LimitByUid(String area, String desc, String height, String sex, int page,
+	public ArrayList<HairStyle> getStoreByGroup_LimitByUid(String area, String desc, String height, String sex, int page,
 			int count,int uid) throws ClassNotFoundException, SQLException {
 		ArrayList<HairStyle> list = new ArrayList<HairStyle>();
 		List<Integer> usersId = new UserRelationDAO().getUsersId2ByUid(uid);
@@ -209,6 +218,9 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 		return 0;
 	}
 
+	/**
+	 * 获取全部发型库带分页参数
+	 */
 	public ArrayList<HairStyle> getAllByLimit(int page, int count) throws ClassNotFoundException, SQLException {
 		ArrayList<HairStyle> list = new ArrayList<HairStyle>();
 		sql = "select * from hairStyle limit ?,?";
@@ -223,6 +235,9 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 		return list;
 	}
 
+	/**
+	 * 获取单个用户上传的发型库
+	 */
 	public ArrayList<HairStyle> getAllByUID(int uid) throws ClassNotFoundException, SQLException {
 		ArrayList<HairStyle> list = new ArrayList<HairStyle>();
 		sql = "select * from hairStyle where users_id = ?";
@@ -236,21 +251,17 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 		return list;
 	}
 
+	/**
+	 *获取单个发型师上传的发型库图片带分页 
+	 */
 	public ArrayList<HairStyle> getAllByUID_Limit(int uid, int page, int count) throws ClassNotFoundException,
 			SQLException {
 		ArrayList<HairStyle> list = new ArrayList<HairStyle>();
-		List<Integer> usersId = new UserRelationDAO().getUsersId2ByUid(uid);
-		String user = String.valueOf(uid);
-		if(usersId.size()>0){
-			for(Integer id:usersId){
-				user+=","+id;
-			}
-		}
-		
-		sql = "select * from hairStyle where users_id in ("+user+") limit ?,?";
+		sql = "select * from hairStyle where users_id = ? limit ?,?";
 		pst = getPrepareStatement(sql);
-		pst.setInt(1, (page - 1) * count);
-		pst.setInt(2, count);
+		pst.setInt(1, uid);
+		pst.setInt(2, (page - 1) * count);
+		pst.setInt(3, count);
 		rst = pst.executeQuery();
 		while (rst.next()) {
 			list.add(assemble(rst));
@@ -290,24 +301,9 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 		return null;
 	}
 
-	public int getCountByUID(int uid) throws ClassNotFoundException, SQLException {
-		//获取美发店下所有发型师的
-		List<Integer> usersId = new UserRelationDAO().getUsersId2ByUid(uid);
-		String user = String.valueOf(uid);
-		if(usersId.size()>0){
-			for(Integer id:usersId){
-				user+=","+id;
-			}
-		}
-		sql = "select count(*) from hairStyle where users_id in ("+user+")";
-		pst = getPrepareStatement(sql);
-		rst = pst.executeQuery();
-		rst.next();
-		int c = rst.getInt(1);
-		release();
-		return c;
-	}
-
+	/**
+	 * 获取单个用户标识的发型库
+	 */
 	public int getCountByMark(int uid) throws ClassNotFoundException, SQLException {
 		sql = "select count(*) from markHairStyle where users_id = ?";
 		pst = getPrepareStatement(sql);
@@ -367,6 +363,23 @@ public class HairStyleDAO extends DBMain<HairStyle> {
 		h.setHairStyle_sex(rst.getString("hairStyle_sex"));
 		h.setUsers_id(rst.getInt("users_id"));
 		return h;
+	}
+	
+	/**
+	 * 获取美发店的发型
+	 */
+	public List<HairStyle> getStoreByLimit(int uid,int page,int count) throws ClassNotFoundException, SQLException {
+		List<HairStyle> list = new ArrayList<HairStyle>();
+		sql = "select * from hairStyle where users_id = "+uid+" or users_id in (select users_id2 from userRelation where users_id ="+uid+") limit ?,? ";
+		pst = getPrepareStatement(sql);
+		pst.setInt(1, (page - 1) * count);
+		pst.setInt(2, count);
+		rst = pst.executeQuery();
+		while (rst.next()) {
+			list.add(assemble(rst));
+		}
+		release();
+		return list;
 	}
 
 }

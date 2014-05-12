@@ -36,11 +36,14 @@ public class AdVideoDAO extends DBMain<AdVideo> {
 		return list;
 	}
 
-	public ArrayList<AdVideo> getAllByUid(int id) throws ClassNotFoundException, SQLException {
+	//App
+	/**
+	 * 根据agentId,storeId获取上级美发店，代理商和超管的待机视频
+	 */
+	public ArrayList<AdVideo> getAllByUid(int agentId,int storeId) throws ClassNotFoundException, SQLException {
 		ArrayList<AdVideo> list = new ArrayList<AdVideo>();
 		//获取到一级管理员上传的视频
-		int meifaId = new UserRelationDAO().getUsersIdByUid2(id);//美发店
-		String userId = new UserRelationDAO().getUsersIdByUid2(meifaId)+"";//代理商
+		String userId = agentId + "," + storeId;
 		List<Integer> managerIds = new UsersDAO().getManagerUserId();//获取管理员Id
 		for(Integer uid:managerIds){
 			userId+=","+uid;
@@ -55,6 +58,9 @@ public class AdVideoDAO extends DBMain<AdVideo> {
 		return list;
 	}
 	
+	/**
+	 * 获取单个用户上传的待机视频
+	 */
 	public ArrayList<AdVideo> getVideoByUid(int id) throws ClassNotFoundException, SQLException {
 		ArrayList<AdVideo> list = new ArrayList<AdVideo>();
 		sql = "select * from adVideo where users_id =?";
@@ -101,6 +107,7 @@ public class AdVideoDAO extends DBMain<AdVideo> {
 
 	}
 
+	//App
 	public void modifyCount(int count, int id) throws ClassNotFoundException, SQLException {
 		sql = "update adVideo set adVideo_count = ? where adVideo_id = ?";
 		pst = getPrepareStatement(sql);
@@ -141,6 +148,21 @@ public class AdVideoDAO extends DBMain<AdVideo> {
 		a.setAdVideo_type(rst.getInt("adVideo_type"));
 		a.setUsers_id(rst.getInt("users_id"));
 		return a;
+	}
+	
+	/**
+	 * 根据参数包含多个用户以,号分开，获得视频列表
+	 */
+	public ArrayList<AdVideo> getAllByUids(String uids) throws ClassNotFoundException, SQLException {
+		ArrayList<AdVideo> list = new ArrayList<AdVideo>();
+		sql = "select * from adVideo where users_id in ("+uids+")";
+		pst = getPrepareStatement(sql);
+		rst = pst.executeQuery();
+		while (rst.next()) {
+			list.add(assemble(rst));
+		}
+		release();
+		return list;
 	}
 
 }

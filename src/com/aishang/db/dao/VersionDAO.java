@@ -28,6 +28,7 @@ public class VersionDAO extends DBMain<Version> {
 		return null;
 	}
 
+	//App
 	public Version checkUpdate(String version) throws ClassNotFoundException, SQLException {
 		sql = "select * from appVersion where version > ? limit 0,1";
 		pst = getPrepareStatement(sql);

@@ -110,5 +110,29 @@ public class UserRelationDAO extends DBMain<UserRelation> {
 		release();
 		return 0;
 	}
+	
+	
+	/**
+	 *根据父节点获取子节点，多个子节点以,号隔开 
+	 */
+	public String getChildIdsByUid (int uid) throws ClassNotFoundException,
+	SQLException {
+		StringBuffer sb = new StringBuffer();
+		int count = 0;
+		sql = "select * from userRelation where users_id = ?";
+		pst = getPrepareStatement(sql);
+		pst.setInt(1, uid);
+		rst = pst.executeQuery();
+		while (rst.next()) {
+			if(count==0){
+				sb.append(rst.getInt("users_id2"));
+			}else{
+				sb.append(",").append(rst.getInt("users_id2"));
+			}
+			count++;
+		}
+		release();
+		return sb.toString();
+	}
 
 }

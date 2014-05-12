@@ -8,10 +8,9 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
 <%
 	String path = request.getContextPath();
-	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-			+ path + "/";
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
 	String filePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-	filePath = "http://bcs.duapp.com/aishangupload";
+	//filePath = "http://bcs.duapp.com/aishangupload";
 %>
 <!DOCTYPE html >
 <%@page import="com.aishang.db.bean.Users"%>
@@ -86,22 +85,18 @@
             	int rowCuont = 0;
             	switch(user.getUserGroup_id()){
             	case 3: 
-            		list = hairStyleDAO.getAgentByGroup_LimitByUid(area, desc, height, sex, Integer.parseInt(pageNow), 20,user.getUsers_id());
-            		rowCuont = hairStyleDAO.getAgentHairStyleCountByUid(user.getUsers_id());
-            		break;
-            	case 4:
-            		list = hairStyleDAO.getUserByGroup_LimitByUid(area, desc, height, sex, Integer.parseInt(pageNow), 20,user.getUsers_id());
-            		rowCuont = hairStyleDAO.getHairStyleCountByUid(user.getUsers_id());
-            		break;
-            	case 1:
-            		list = hairStyleDAO.getAllByGroup_LimitUid(area, desc, height, sex, Integer.parseInt(pageNow), 20);
-            		rowCuont = hairStyleDAO.getHairStyleCount();
-            		break;
-            	case 2:
-            		list = hairStyleDAO.getAllByGroup_LimitUid(area, desc, height, sex, Integer.parseInt(pageNow), 20);
-            		rowCuont = hairStyleDAO.getHairStyleCount();
+            		list = hairStyleDAO.getStoreByGroup_LimitByUid(area, desc, height, sex, Integer.parseInt(pageNow), 20,user.getUsers_id());
+            		rowCuont = hairStyleDAO.getStoreHairStyleCountByUid(user.getUsers_id());
             		break;
             	};
+            	/**case 4:
+        		list = hairStyleDAO.getUserByGroup_LimitByUid(area, desc, height, sex, Integer.parseInt(pageNow), 20,user.getUsers_id());
+        		rowCuont = hairStyleDAO.getHairStyleCountByUid(user.getUsers_id());
+        		break;
+        		case 1:
+        		list = hairStyleDAO.getAllByGroup_LimitUid(area, desc, height, sex, Integer.parseInt(pageNow), 20);
+        		rowCuont = hairStyleDAO.getHairStyleCount();
+        		break;*/
             	
           		int pageCount = (rowCuont - 1)/20 + 1;
           		int pagePre = Integer.parseInt(pageNow)-1 < 1 ? 1 : Integer.parseInt(pageNow)-1;

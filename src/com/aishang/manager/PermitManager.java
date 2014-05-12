@@ -30,7 +30,7 @@ public class PermitManager {
 		case 3:
 
 			return true;
-		case 5:
+		case 4:
 			return true;
 		}
 		return false;
@@ -53,8 +53,6 @@ public class PermitManager {
 			return true;
 		case 4:
 			return true;
-		case 5:
-			return true;
 		}
 		return false;
 	}
@@ -73,7 +71,7 @@ public class PermitManager {
 		case 3:
 
 			return true;
-		case 5:
+		case 4:
 			return true;
 		}
 		return false;

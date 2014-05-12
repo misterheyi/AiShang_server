@@ -29,8 +29,8 @@ public abstract class DBMain<E> {
 	 * @throws SQLException
 	 */
 	protected PreparedStatement getPrepareStatement(String sql) throws ClassNotFoundException, SQLException {
-		getRemotePST();
-//		 getLocalPST();
+//		getRemotePST();
+		 getLocalPST();
 		return pst;
 	}
 
@@ -47,7 +47,7 @@ public abstract class DBMain<E> {
 		Class.forName(driver);
 		// --------------获得数据库连接------------------
 //		con = DriverManager.getConnection(url, "root", "2238447");
-		con = DriverManager.getConnection(url, "root", "123456");
+		con = DriverManager.getConnection(url, "root", "ruanko");
 		// ------------封装SQL语句为可执行的对象-----------
 		pst = con.prepareStatement(sql);
 	}

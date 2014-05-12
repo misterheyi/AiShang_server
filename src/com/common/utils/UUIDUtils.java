@@ -6,6 +6,6 @@ public class UUIDUtils {
 
 	public static String getUUID() {
 		UUID uuid = UUID.randomUUID();
-		return uuid.toString();
+		return uuid.toString().replace("-", "");
 	}
 }

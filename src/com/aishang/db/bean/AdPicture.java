@@ -6,6 +6,15 @@ public class AdPicture {
 	private String adPicture_desc;
 	private int adPictureGroup_id;
 	private int users_id;
+	private int adPictureCount;
+
+	public int getAdPictureCount() {
+		return adPictureCount;
+	}
+
+	public void setAdPictureCount(int adPictureCount) {
+		this.adPictureCount = adPictureCount;
+	}
 
 	public String getAdPicture_desc() {
 		return adPicture_desc;
