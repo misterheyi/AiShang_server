@@ -42,7 +42,7 @@ public abstract class DBMain<E> {
 	 */
 	protected void getLocalPST() throws SQLException, ClassNotFoundException {
 		String driver = "com.mysql.jdbc.Driver";
-		String url = "jdbc:mysql://127.0.0.1:3306/aishang";
+		String url = "jdbc:mysql://127.0.0.1:3308/aishang";
 		// -------------加载JDBC驱动------------------
 		Class.forName(driver);
 		// --------------获得数据库连接------------------
