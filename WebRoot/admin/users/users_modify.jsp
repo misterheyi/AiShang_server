@@ -28,11 +28,6 @@
 	Users users = dao.getById(Integer.parseInt(request.getParameter("uid")));
 	int groupId = users.getUserGroup_id();
 	//美发店用户有上传权限需特殊处理
-	UploadAuth uploadAuth = null;
-	if(groupId==3){
-		UploadAuthDao authDao = new UploadAuthDao();
-		uploadAuth = authDao.getUploadAuthByUid(users.getUsers_id());
-	}
  %>
 <div id="body-wrapper">
   	<jsp:include page="../include/sidebar.jsp" ><jsp:param name="selected" value=""/></jsp:include>
@@ -64,23 +59,6 @@
 			  	<label>IMEI</label>
               	<input class="text-input small-input" value="<%=users.getUsers_IMEI() %>" type="text" id="small-input" name="users_IMEI" />
               	<small>(设备唯一标识码)</small> 
-              </p>
-              <%} %>
-              <%if(uploadAuth!=null&&uploadAuth.getAuth_id()==0){
-              %>
-              <p>
-              	<input class="text-input" type="checkbox" id="is_upload" name="users_is_upload" />是否允许上传视频或待机图片
-              </p>  
-              <%
-              } %>
-              <%if(uploadAuth!=null){ %>
-              <p class="upload-auth">
-			  	<label>上传视频数量</label>
-              	<input class="text-input small-input" type="text" name="upload_adVideo_num" value="<%=uploadAuth.getAllow_video_num() %>"/>
-              </p>
-              <p class="upload-auth">
-			  	<label>上传待机图片数量</label>
-              	<input class="text-input small-input" type="text" name="upload_adPicture_num" value="<%=uploadAuth.getAllow_picture_num() %>"/>
               </p>
               <%} %>
 			  <p>

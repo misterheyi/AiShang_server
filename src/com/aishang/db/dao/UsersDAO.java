@@ -379,7 +379,7 @@ public class UsersDAO extends DBMain<Users> {
 
 	public List<Integer> getManagerUserId()throws ClassNotFoundException, SQLException  {
 		ArrayList<Integer> list = new ArrayList<Integer>();
-		sql = "select * from users where userGroup_id <=2";
+		sql = "select * from users where userGroup_id =1";
 		pst = getPrepareStatement(sql);
 		rst = pst.executeQuery();
 		while (rst.next()) {

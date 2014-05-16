@@ -48,7 +48,7 @@ public class AdPictureDAO extends DBMain<AdPicture> {
 	public ArrayList<AdPicture> getScollPicture(String id) throws ClassNotFoundException, SQLException {
 		ArrayList<AdPicture> list = new ArrayList<AdPicture>();
 		sql = "select * from adPicture where adPictureGroup_id =4 and (users_id = ? or users_id in (" +
-				"select users_id from users where userGroup_id <=2 " +	//超管Id
+				"select users_id from users where userGroup_id =1 " +	//超管Id
 				"union select users_id from userRelation where users_id2 = ?))";//代理商Id
 		pst = getPrepareStatement(sql);
 		pst.setString(1, id);

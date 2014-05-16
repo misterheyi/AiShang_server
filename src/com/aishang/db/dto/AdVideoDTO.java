@@ -4,15 +4,16 @@ import java.util.List;
 
 import com.aishang.db.DTOMain;
 import com.aishang.db.bean.AdVideo;
+import com.aishang.vo.AdVideoVO;
 
 public class AdVideoDTO extends DTOMain {
-	private List<AdVideo> videos;
+	private List<AdVideoVO> videos;
 
-	public List<AdVideo> getVideos() {
+	public List<AdVideoVO> getVideos() {
 		return videos;
 	}
 
-	public void setVideos(List<AdVideo> videos) {
+	public void setVideos(List<AdVideoVO> videos) {
 		this.videos = videos;
 	}
 

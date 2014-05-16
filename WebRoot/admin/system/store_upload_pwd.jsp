@@ -42,7 +42,7 @@
         <div class="tab-content default-tab" id="tab1">
         <form method="post" action="<%=basePath %>admin/controller/openUploadAuth">
         <input type="hidden" name="type" value="<%=request.getParameter("type")%>" />
-        <p>该店已开通上传权限，输入代理商提供的密码后才可允许上传，上传数量均有代理商决定</p>
+        <p>输入提供的密码后才可允许上传</p>
         <input class="text-input small-input" type="text" name="upload_password"/>
         <input type="submit" value="提交" class="button" />
         </form>

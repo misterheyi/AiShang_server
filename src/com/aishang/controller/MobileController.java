@@ -27,6 +27,11 @@ import com.aishang.db.dto.AdVideoDTO;
 import com.aishang.db.dto.HairStyleDTO;
 import com.aishang.db.dto.LoginDTO;
 import com.aishang.db.dto.PriceListDTO;
+import com.aishang.db.dto.ScrollPictureDTO;
+import com.aishang.manager.AdPictureManager;
+import com.aishang.manager.AdVideoManager;
+import com.aishang.vo.AdPictureVO;
+import com.aishang.vo.AdVideoVO;
 import com.alibaba.fastjson.JSON;
 
 /**
@@ -114,9 +119,12 @@ public class MobileController extends HttpServlet {
 			HttpServletResponse response) throws ClassNotFoundException,
 			SQLException {
 		String id = request.getParameter("storeId");
-		List<AdPicture> ad4 = new AdPictureDAO().getScollPicture(id);
-		PriceListDTO dto = new PriceListDTO();
-		dto.setAd4(ad4);
+		
+		AdPictureManager adPictureManager = new AdPictureManager();
+		List<AdPictureVO> ad = adPictureManager.getScollPicture(id);
+		ScrollPictureDTO dto = new ScrollPictureDTO();
+		dto.setAd(ad);
+		
 		return JSON.toJSONString(dto);
 	}
 
@@ -198,8 +206,8 @@ public class MobileController extends HttpServlet {
 		AdVideoDTO dto = new AdVideoDTO();
 		String agentId = request.getParameter("agentId");
 		String storeId = request.getParameter("storeId");
-		AdVideoDAO adVideoDAO = new AdVideoDAO();
-		List<AdVideo> videos = adVideoDAO.getAllByUid(Integer.valueOf(agentId),Integer.valueOf(storeId));
+		System.out.println("agentId:"+agentId+",storeId:"+storeId);
+		List<AdVideoVO> videos = new AdVideoManager().getAllByUid(Integer.valueOf(agentId),Integer.valueOf(storeId));
 		dto.setVideos(videos);
 
 		return JSON.toJSONString(dto);

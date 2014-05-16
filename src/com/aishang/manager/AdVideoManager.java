@@ -90,4 +90,20 @@ public class AdVideoManager {
 		return list;
 	}
 
+	/**
+	 * App
+	 * 根据代理商Id和美发店Id获取上传视频（包括超管）
+	 * @param agentId
+	 * @param storeId
+	 * @return
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
+	 */
+	public List<AdVideoVO> getAllByUid(Integer agentId, Integer storeId) throws ClassNotFoundException, SQLException {
+		List<AdVideoVO> list = new ArrayList<AdVideoVO>();
+		List<AdVideo> adVideos = adVideoDAO.getAllByUid(agentId,storeId);
+		convertAdVideoVoList(list, adVideos);
+		return list;
+	}
+
 }

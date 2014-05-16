@@ -212,17 +212,14 @@ public class AdminController extends HttpServlet {
 			UploadAuth uploadAuth = new UploadAuthDao().getUploadAuthByUid(own
 					.getUsers_id());
 			if (action != null && action.equals("add")) {
-				if (uploadAuth.getAllow_picture_num() == uploadAuth
-						.getUsed_picture_num()) {
-					throw new MyException("上传数量已达上限，请联系代理商");
+				if (uploadAuth.getAllow_picture_num() == uploadAuth.getUsed_picture_num()) {
+					throw new MyException("上传数量已达上限");
 				} else {
 					response.sendRedirect(basePath
 							+ "admin/ad/scrollPicture_add.jsp");
 				}
 			} else {
-				if (uploadAuth.getAuth_id() == 0) {
-					throw new MyException("没有上传权限，请联系代理商");
-				} else if (uploadAuth.getIs_open().equals("0")) {
+				if (uploadAuth.getIs_open().equals("0")) {
 					response.sendRedirect(basePath
 							+ "admin/system/store_upload_pwd.jsp?type=picture");
 				} else {
@@ -247,18 +244,13 @@ public class AdminController extends HttpServlet {
 
 		UploadAuthDao authDao = new UploadAuthDao();
 		UploadAuth uploadAuth = authDao.getUploadAuthByUid(own.getUsers_id());
-		if (uploadAuth.getAuth_id() == 0) {
-			throw new MyException("没有上传权限，请联系代理商");
+		uploadAuth.setIs_open("1");
+		authDao.modify(uploadAuth);
+		if (type.equals("video")) {
+			response.sendRedirect(basePath + "admin/ad/adVideo_list.jsp");
 		} else {
-			uploadAuth.setIs_open("1");
-			authDao.modify(uploadAuth);
-			if (type.equals("video")) {
-				response.sendRedirect(basePath + "admin/ad/adVideo_list.jsp");
-			} else {
-				response.sendRedirect(basePath
-						+ "admin/ad/scrollPicture_list.jsp");
-			}
-
+			response.sendRedirect(basePath
+					+ "admin/ad/scrollPicture_list.jsp");
 		}
 	}
 
@@ -269,19 +261,15 @@ public class AdminController extends HttpServlet {
 
 		// 校验美发店上传视频权限
 		if (groupId == 3) {
-			UploadAuth uploadAuth = new UploadAuthDao().getUploadAuthByUid(own
-					.getUsers_id());
+			UploadAuth uploadAuth = new UploadAuthDao().getUploadAuthByUid(own.getUsers_id());
 			if (action != null && action.equals("add")) {
-				if (uploadAuth.getAllow_video_num() == uploadAuth
-						.getAllow_video_num()) {
-					throw new MyException("上传数量已达上限，请联系代理商");
+				if (uploadAuth.getAllow_video_num() == uploadAuth.getUsed_video_num()) {
+					throw new MyException("上传数量已达上限");
 				} else {
 					response.sendRedirect(basePath + "admin/ad/adVideo_add.jsp");
 				}
 			} else {
-				if (uploadAuth.getAuth_id() == 0) {
-					throw new MyException("没有上传权限，请联系代理商");
-				} else if (uploadAuth.getIs_open().equals("0")) {
+				if (uploadAuth.getIs_open().equals("0")) {
 					response.sendRedirect(basePath
 							+ "admin/system/store_upload_pwd.jsp?type=video");
 				} else {
@@ -297,11 +285,23 @@ public class AdminController extends HttpServlet {
 	private void modifyUploadPwd(HttpServletRequest request,
 			HttpServletResponse response) throws ClassNotFoundException,
 			SQLException {
+		
 		String uploadPwd = request.getParameter("upload_password");
-		SystemSetting setting = new SystemSettingDao().getByType("upload_pwd");
+		String uploadVideoNum = request.getParameter("upload_video_num");
+		String uploadPictureNum = request.getParameter("upload_picture_num");
+		
+		SystemSettingDao systemSettingDao = new SystemSettingDao();
+		
+		SystemSetting settingPwd = systemSettingDao.getByType("upload_pwd");
+		SystemSetting settingVideoNum = systemSettingDao.getByType("upload_video_num");
+		SystemSetting settingPictureNum = systemSettingDao.getByType("upload_picture_num");
 
-		setting.setSetting_value(uploadPwd);
-		new SystemSettingDao().modify(setting);
+		settingPwd.setSetting_value(uploadPwd);
+		settingVideoNum.setSetting_value(uploadVideoNum);
+		settingPictureNum.setSetting_value(uploadPictureNum);
+		systemSettingDao.modify(settingPwd);
+		systemSettingDao.modify(settingVideoNum);
+		systemSettingDao.modify(settingPictureNum);
 	}
 
 	private void uploadVersion(HttpServletRequest request,
@@ -522,6 +522,15 @@ public class AdminController extends HttpServlet {
 				adVideo.setAdVideo_count(0);
 				AdVideoDAO adVideoDAO = new AdVideoDAO();
 				adVideoDAO.add(adVideo);
+				
+				//若当前用户为美发店则上传数量需加1
+				if(groupId==3){
+					UploadAuthDao uploadAuthDao = new UploadAuthDao();
+					UploadAuth uploadAuth = uploadAuthDao.getUploadAuthByUid(users_id);
+					uploadAuth.setUsed_video_num(uploadAuth.getUsed_video_num()+1);
+					uploadAuthDao.modify(uploadAuth);
+				}
+				
 			}
 
 			@Override
@@ -650,6 +659,14 @@ public class AdminController extends HttpServlet {
 							picture.setUsers_id(users_id);
 							AdPictureDAO dao = new AdPictureDAO();
 							dao.add(picture);
+							
+							//若当前用户为美发店则上传数量需加1
+							if(groupId==3&&adPictureGroup_id.equals("4")){
+								UploadAuthDao uploadAuthDao = new UploadAuthDao();
+								UploadAuth uploadAuth = uploadAuthDao.getUploadAuthByUid(users_id);
+								uploadAuth.setUsed_picture_num((uploadAuth.getUsed_picture_num()+1));
+								uploadAuthDao.modify(uploadAuth);
+							}
 						}
 					}
 				}
@@ -678,9 +695,6 @@ public class AdminController extends HttpServlet {
 		String users_password = request.getParameter("users_password");
 		String users_IMEI = request.getParameter("users_IMEI");
 		String users_id = request.getParameter("users_id");
-		String upload_adPicture_num = request.getParameter("upload_adPicture_num");
-		String upload_adVideo_num = request.getParameter("upload_adVideo_num");
-		String users_is_upload = request.getParameter("users_is_upload");
 
 		UsersDAO dao = new UsersDAO();
 		Users users = dao.getById(Integer.parseInt(users_id));
@@ -697,38 +711,15 @@ public class AdminController extends HttpServlet {
 
 			dao.modify(users);
 
-			if (!"".equals(upload_adPicture_num)
-					&& null != upload_adPicture_num
-					&& !"".equals(upload_adVideo_num)
-					&& null != upload_adVideo_num) {
-				int allowPictureNum = Integer.valueOf(request
-						.getParameter("upload_adPicture_num"));
-				int allowVideoNum = Integer.valueOf(request
-						.getParameter("upload_adVideo_num"));
-				UploadAuthDao authDao = new UploadAuthDao();
-				UploadAuth auth = new UploadAuth();
-				auth.setAllow_picture_num(allowPictureNum);
-				auth.setAllow_video_num(allowVideoNum);
-				auth.setUsers_id(users.getUsers_id());
-
-				if (users_is_upload.equals("on")) {
-					auth.setUsed_picture_num(0);
-					auth.setUsed_video_num(0);
-					auth.setIs_open("0");
-					authDao.add(auth);
-				} else {
-					authDao.modify(auth);
-				}
-			}
 
 		} else {
 			throw new MyException("权限不足");
 		}
 
-		if (users.getUserGroup_id() != 4) {
-			response.sendRedirect(basePath + "admin/users/users_list.jsp");
+		if (own.getUserGroup_id() == 1) {
+			response.sendRedirect(basePath + "admin/users/admin_users_list.jsp");
 		} else {
-			response.sendRedirect(basePath + "admin/index.jsp");
+			response.sendRedirect(basePath + "admin/users/users_list.jsp");
 		}
 
 	}
@@ -784,7 +775,6 @@ public class AdminController extends HttpServlet {
 		String users_email = request.getParameter("users_email");
 		String users_password = request.getParameter("users_password");
 		String users_IMEI = request.getParameter("users_IMEI");
-		String is_upload = request.getParameter("users_is_upload");
 		if (users_IMEI == null) {
 			users_IMEI = "null";
 		}
@@ -807,12 +797,10 @@ public class AdminController extends HttpServlet {
 			relation.setUsers_id2(u.getUsers_id());
 			relationDAO.add(relation);
 
-			// is_upload为on说明开通上传权限，则添加美发店可上传权限记录
-			if (is_upload.equals("on")) {
-				int allowPictureNum = Integer.valueOf(request
-						.getParameter("upload_adPicture_num"));
-				int allowVideoNum = Integer.valueOf(request
-						.getParameter("upload_adVideo_num"));
+			if (userGroup_id.equals("3")) {
+				SystemSettingDao systemSettingDao = new SystemSettingDao();
+				int allowPictureNum = Integer.valueOf(systemSettingDao.getByType("upload_picture_num").getSetting_value());
+				int allowVideoNum = Integer.valueOf(systemSettingDao.getByType("upload_video_num").getSetting_value());
 				UploadAuthDao authDao = new UploadAuthDao();
 				UploadAuth uploadAuth = new UploadAuth();
 				uploadAuth.setAllow_picture_num(allowPictureNum);
@@ -820,7 +808,7 @@ public class AdminController extends HttpServlet {
 				uploadAuth.setUsed_picture_num(0);
 				uploadAuth.setUsed_video_num(0);
 				uploadAuth.setUsers_id(u.getUsers_id());
-				uploadAuth.setIs_open("0");
+				uploadAuth.setIs_open("1");
 				authDao.add(uploadAuth);
 			}
 

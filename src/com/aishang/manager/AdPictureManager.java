@@ -92,4 +92,19 @@ public class AdPictureManager {
 		}
 		return list;
 	}
+
+	/**
+	 * App
+	 * 根据美发店Id获取本店及上属代理商和超管上传待机图片
+	 * @param id
+	 * @return
+	 * @throws SQLException 
+	 * @throws ClassNotFoundException 
+	 */
+	public List<AdPictureVO> getScollPicture(String id) throws ClassNotFoundException, SQLException {
+		List<AdPictureVO> list = new ArrayList<AdPictureVO>();
+		List<AdPicture> adPictures = adPictureDAO.getScollPicture(id);
+		convertAdPictureVoList(list, adPictures);
+		return list;
+	}
 }
