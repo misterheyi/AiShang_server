@@ -9,7 +9,7 @@ public class UploadAuth{
 	private int allow_picture_num;	//允许上传待机图片数量
 	private int used_video_num;		//已经上传视频数量
 	private int used_picture_num;	//已经待机图片数量
-	private String is_open;			//是否开通上传权限,1为开通，0为未开通
+	private String is_open = "0";			//是否开通上传权限,1为开通，0为未开通
 	
 	public String getIs_open() {
 		return is_open;

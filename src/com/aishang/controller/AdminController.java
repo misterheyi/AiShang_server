@@ -245,7 +245,19 @@ public class AdminController extends HttpServlet {
 		UploadAuthDao authDao = new UploadAuthDao();
 		UploadAuth uploadAuth = authDao.getUploadAuthByUid(own.getUsers_id());
 		uploadAuth.setIs_open("1");
-		authDao.modify(uploadAuth);
+		if(uploadAuth.getAuth_id()>0){
+			authDao.modify(uploadAuth);
+		}else{
+			SystemSettingDao systemSettingDao = new SystemSettingDao();
+			uploadAuth.setAllow_picture_num(Integer.valueOf(systemSettingDao.getByType("upload_picture_num").getSetting_value()));
+			uploadAuth.setAllow_video_num(Integer.valueOf(systemSettingDao.getByType("upload_video_num").getSetting_value()));
+			uploadAuth.setUsed_picture_num(0);
+			uploadAuth.setUsed_video_num(0);
+			uploadAuth.setUsers_id(own.getUsers_id());
+			authDao.add(uploadAuth);
+		}
+		
+		
 		if (type.equals("video")) {
 			response.sendRedirect(basePath + "admin/ad/adVideo_list.jsp");
 		} else {
