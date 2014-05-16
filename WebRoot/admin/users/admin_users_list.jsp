@@ -203,8 +203,8 @@
         		  </form>
                   </div>
                   <div class="pagination">
-                  	<a href="users_list.jsp" title="First Page">&laquo; 首页</a>
-                  	<a href="users_list.jsp?p=<%=pagePre %>" title="Previous Page">&laquo; 上一页</a> 
+                  	<a href="admin_users_list.jsp" title="First Page">&laquo; 首页</a>
+                  	<a href="admin_users_list.jsp?p=<%=pagePre %>" title="Previous Page">&laquo; 上一页</a> 
                     <%
                     	int first = i * 5;
                     	int length = 6;
@@ -214,12 +214,12 @@
                     	for(int j = 1; j < length; j++){
                     	if((first+j)<=pageCount){
                     %>
-                    <a href="users_list.jsp?p=<%=first+j %>" class='number <%=first+j==pageNow ? "current":""%>'><%=first+j %></a> 
+                    <a href="admin_users_list.jsp?p=<%=first+j %>" class='number <%=first+j==pageNow ? "current":""%>'><%=first+j %></a> 
                     <% 
                     	}}
                     %>
-                  	<a href="users_list.jsp?p=<%=pageNext %>" title="Next Page">下一页 &raquo;</a>
-                  	<a href="users_list.jsp?p=<%=pageCount %>" title="Last Page">尾页 &raquo;</a> 
+                  	<a href="admin_users_list.jsp?p=<%=pageNext %>" title="Next Page">下一页 &raquo;</a>
+                  	<a href="admin_users_list.jsp?p=<%=pageCount %>" title="Last Page">尾页 &raquo;</a> 
                   </div>
                   <!-- End .pagination -->
                   <div class="clear"></div>
