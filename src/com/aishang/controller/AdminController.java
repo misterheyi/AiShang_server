@@ -388,15 +388,12 @@ public class AdminController extends HttpServlet {
 	private void deleteHairStyle(HttpServletRequest request,
 			HttpServletResponse response) throws NumberFormatException,
 			ClassNotFoundException, SQLException {
-		final int users_id = own.getUsers_id();
 		String hairStyle_id = request.getParameter("id");
 		MarkHairStyleDAO dao = new MarkHairStyleDAO();
 		HairStyleDAO hairStyleDAO = new HairStyleDAO();
-		HairStyle hairStyle = hairStyleDAO.getById(Integer
-				.parseInt(hairStyle_id));
+		HairStyle hairStyle = hairStyleDAO.getById(Integer.parseInt(hairStyle_id));
 		if (hairStyle == null)
 			return;
-		if (hairStyle.getUsers_id() == users_id) {
 			hairStyleDAO.delete(hairStyle);
 			// String diskPath = this.getServletConfig().getServletContext()
 			// .getRealPath("");
@@ -407,9 +404,6 @@ public class AdminController extends HttpServlet {
 			File file = new File(diskPath + hairStyle.getHairStyle_path());
 			file.delete();
 			dao.deleteByHId(hairStyle.getHairStyle_id());
-		} else {
-			System.out.println("没有权限删除发型");
-		}
 	}
 
 	private void modifyHairStyle(HttpServletRequest request,
