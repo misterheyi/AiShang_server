@@ -244,7 +244,8 @@ public class AdminController extends HttpServlet {
 
 		UploadAuthDao authDao = new UploadAuthDao();
 		UploadAuth uploadAuth = authDao.getUploadAuthByUid(own.getUsers_id());
-		uploadAuth.setIs_open("1");
+//		uploadAuth.setIs_open("1");
+		uploadAuth.setIs_open("0");//每次输入都还需密码 
 		if(uploadAuth.getAuth_id()>0){
 			authDao.modify(uploadAuth);
 		}else{
